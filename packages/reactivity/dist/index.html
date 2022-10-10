@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!--<script src="../../../node_modules/@vue/reactivity/dist/reactivity.global.js"></script>-->
+<div id="app"></div>
+<script src="./reactivity.global.js"></script>
+<script>
+    const {effect, reactive} = VueReactivity
+    const obj = reactive({
+        name: 'name', age: 18, address: 'address'
+    })
+    console.log(obj)
+
+
+    effect(() => {
+        app.innerHTML = obj.name + obj.age
+        effect(() => {
+            app.innerHTML = obj.address
+        })
+        app.innerHTML = obj.age
+    })
+
+    setTimeout(() => {
+        // obj.age = 123
+        obj.age++
+    }, 1000)
+
+</script>
+</body>
+</html>
