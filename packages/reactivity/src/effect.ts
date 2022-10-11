@@ -3,7 +3,8 @@ export let activeEffect = undefined
 class ReactiveEffect {
     public active = true // 激活状态
     public parent = null
-    public deps = []
+    // [Set(name reactiveEffect), Set(age reactiveEffect)]
+    public deps = [] // 当前effect对应的依赖Set
 
     constructor(public fn) {
     }
@@ -13,14 +14,25 @@ class ReactiveEffect {
         // 响应式依赖收集
 
         try {
+
+            console.log('effect被执行') //  分支切换不加cleanup会重复执行
             this.parent = activeEffect
             activeEffect = this
+            cleanupEffect(this)
             return this.fn()
         } finally {
             activeEffect = this.parent
         }
 
     }
+}
+
+function cleanupEffect(reactiveEffect) {
+    const {deps} = reactiveEffect
+    for (let i = 0; i < deps.length; i++) {
+        deps[i].delete(reactiveEffect)
+    }
+    reactiveEffect.deps.length = 0
 }
 
 export function effect(fn) {
@@ -50,10 +62,14 @@ export function track(target, type, key) {
 export function trigger(target, type, key, value) {
     const depsMap = targetMap.get(target)
     if (!depsMap) return // 没在依赖中找到,说明没在模板中,不用触发页面更新
-    const effects = depsMap.get(key)
-    effects && effects.forEach(effect => {
-        if (effect !== activeEffect) effect.run()
-    })
+    let effects = depsMap.get(key)
+    if (effects) {
+        effects = new Set(effects)
+        effects.forEach(effect => {
+            if (effect !== activeEffect) effect.run()
+        })
+    }
+
 }
 
 

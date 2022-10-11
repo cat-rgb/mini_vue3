@@ -9,12 +9,12 @@ export const handler = {
         if (key === ReactiveFlags.IS_REACTIVE) {
             return true
         }
-        console.log('get 监听')
+        // console.log('get 监听')
         track(target, 'get', key)
         return Reflect.get(target, key, receiver)
     },
     set(target: any, key: string | symbol, newValue: any, receiver: any): boolean {
-        console.log('set 设置')
+        // console.log('set 设置')
         let oldValue = target[key]
         const result = Reflect.set(target, key, newValue, receiver)
         if (oldValue !== newValue) {

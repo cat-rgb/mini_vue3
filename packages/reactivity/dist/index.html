@@ -11,22 +11,32 @@
 <script>
     const {effect, reactive} = VueReactivity
     const obj = reactive({
-        name: 'name', age: 18, address: 'address'
+        name: 'name', age: 18, address: 'address',
+        flag: true
     })
     console.log(obj)
 
 
     effect(() => {
-        app.innerHTML = obj.name + obj.age
-        effect(() => {
-            app.innerHTML = obj.address
-        })
-        app.innerHTML = obj.age
+        // app.innerHTML = obj.name + obj.age
+        // effect(() => {
+        //     app.innerHTML = obj.address
+        // })
+        // app.innerHTML = obj.age
+
+        app.innerHTML = obj.flag ? obj.name : obj.age
     })
 
     setTimeout(() => {
+        obj.flag = false
+        setTimeout(() => {
+            obj.name = '123'
+        }, 1000)
+        setTimeout(() => {
+            obj.flag = true
+        }, 2000)
         // obj.age = 123
-        obj.age++
+        // obj.age++
     }, 1000)
 
 </script>

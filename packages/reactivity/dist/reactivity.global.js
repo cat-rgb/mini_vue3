@@ -42,14 +42,23 @@ var VueReactivity = (() => {
       if (!this.active)
         return this.fn();
       try {
+        console.log("effect\u88AB\u6267\u884C");
         this.parent = activeEffect;
         activeEffect = this;
+        cleanupEffect(this);
         return this.fn();
       } finally {
         activeEffect = this.parent;
       }
     }
   };
+  function cleanupEffect(reactiveEffect) {
+    const { deps } = reactiveEffect;
+    for (let i = 0; i < deps.length; i++) {
+      deps[i].delete(reactiveEffect);
+    }
+    reactiveEffect.deps.length = 0;
+  }
   function effect(fn) {
     const _effectFn = new ReactiveEffect(fn);
     _effectFn.run();
@@ -76,11 +85,14 @@ var VueReactivity = (() => {
     const depsMap = targetMap.get(target);
     if (!depsMap)
       return;
-    const effects = depsMap.get(key);
-    effects && effects.forEach((effect2) => {
-      if (effect2 !== activeEffect)
-        effect2.run();
-    });
+    let effects = depsMap.get(key);
+    if (effects) {
+      effects = new Set(effects);
+      effects.forEach((effect2) => {
+        if (effect2 !== activeEffect)
+          effect2.run();
+      });
+    }
   }
 
   // packages/reactivity/src/baseHandler.ts
@@ -89,12 +101,10 @@ var VueReactivity = (() => {
       if (key === "_v_isReactive" /* IS_REACTIVE */) {
         return true;
       }
-      console.log("get \u76D1\u542C");
       track(target, "get", key);
       return Reflect.get(target, key, receiver);
     },
     set(target, key, newValue, receiver) {
-      console.log("set \u8BBE\u7F6E");
       let oldValue = target[key];
       const result = Reflect.set(target, key, newValue, receiver);
       if (oldValue !== newValue) {
