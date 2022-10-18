@@ -6,7 +6,7 @@ class ReactiveEffect {
     // [Set(name reactiveEffect), Set(age reactiveEffect)]
     public deps = [] // 当前effect对应的依赖Set
 
-    constructor(public fn) {
+    constructor(public fn, public scheduler) {
     }
 
     run() {
@@ -14,7 +14,6 @@ class ReactiveEffect {
         // 响应式依赖收集
 
         try {
-
             console.log('effect被执行') //  分支切换不加cleanup会重复执行
             this.parent = activeEffect
             activeEffect = this
@@ -24,6 +23,13 @@ class ReactiveEffect {
             activeEffect = this.parent
         }
 
+    }
+
+    stop() {
+        if (this.active) {
+            this.active = false
+            cleanupEffect(this)
+        }
     }
 }
 
@@ -35,9 +41,15 @@ function cleanupEffect(reactiveEffect) {
     reactiveEffect.deps.length = 0
 }
 
-export function effect(fn) {
-    const _effectFn = new ReactiveEffect(fn)
+export function effect(fn, options: any = {}) {
+    const _effectFn = new ReactiveEffect(fn, options.scheduler)
     _effectFn.run()
+    const runner = _effectFn.run.bind(_effectFn)
+    runner.effect = _effectFn
+
+    return runner
+
+
 }
 
 //一个属性对应多个effect  一个effect对应多个属性
@@ -66,7 +78,13 @@ export function trigger(target, type, key, value) {
     if (effects) {
         effects = new Set(effects)
         effects.forEach(effect => {
-            if (effect !== activeEffect) effect.run()
+            if (effect !== activeEffect) {
+                if (effect.scheduler) {
+                    effect.scheduler() // 调用用户的scheduler
+                } else {
+                    effect.run() // 调用effect
+                }
+            }
         })
     }
 

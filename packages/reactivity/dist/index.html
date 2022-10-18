@@ -9,15 +9,17 @@
 <div id="app"></div>
 <script src="./reactivity.global.js"></script>
 <script>
+    let wating = false
+
     const {effect, reactive} = VueReactivity
     const obj = reactive({
-        name: 'name', age: 18, address: 'address',
+        name: 'name', age: 18, address: {name: 'address'},
         flag: true
     })
     console.log(obj)
 
 
-    effect(() => {
+    const _effect = effect(() => {
         // app.innerHTML = obj.name + obj.age
         // effect(() => {
         //     app.innerHTML = obj.address
@@ -25,19 +27,44 @@
         // app.innerHTML = obj.age
 
         app.innerHTML = obj.flag ? obj.name : obj.age
+    }, {
+        scheduler() {
+            if (!wating) {
+                wating = true
+                setTimeout(() => {
+                    _effect()
+                    wating = false
+                })
+            }
+        }
     })
 
-    setTimeout(() => {
-        obj.flag = false
-        setTimeout(() => {
-            obj.name = '123'
-        }, 1000)
-        setTimeout(() => {
-            obj.flag = true
-        }, 2000)
-        // obj.age = 123
-        // obj.age++
-    }, 1000)
+    console.log(obj.address)
+
+    // obj.name = '1'
+    // obj.name = '2'
+
+
+    // _effect.effect.stop()
+    // setTimeout(() => {
+    //     obj.name = '1000'
+    //     setTimeout(() => {
+    //         _effect()
+    //     }, 2000)
+    // }, 1000)
+
+
+    // setTimeout(() => {
+    //     obj.flag = false
+    //     setTimeout(() => {
+    //         obj.name = '123'
+    //     }, 1000)
+    //     setTimeout(() => {
+    //         obj.flag = true
+    //     }, 2000)
+    //     // obj.age = 123
+    //     // obj.age++
+    // }, 1000)
 
 </script>
 </body>

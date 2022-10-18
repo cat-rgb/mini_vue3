@@ -1,4 +1,6 @@
 import {activeEffect, track, trigger} from "./effect";
+import {isObject} from "@vue/shared";
+import {reactive} from "./reactive";
 
 export const enum ReactiveFlags {
     IS_REACTIVE = '_v_isReactive'
@@ -11,7 +13,13 @@ export const handler = {
         }
         // console.log('get 监听')
         track(target, 'get', key)
-        return Reflect.get(target, key, receiver)
+        const res = Reflect.get(target, key, receiver)  // Reflect.get的返回值是target[key]
+        console.log('res', res)
+        if (isObject(res)) {
+            return reactive(res)
+        }
+
+        return res
     },
     set(target: any, key: string | symbol, newValue: any, receiver: any): boolean {
         // console.log('set 设置')
